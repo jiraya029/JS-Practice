@@ -1,0 +1,1268 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CineVerse — Movie Updates & Recommendations</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ============================================================
+       DESIGN TOKENS
+    ============================================================ */
+    :root {
+      --bg:          #0E0E12;
+      --surface:     #18181F;
+      --surface2:    #22222C;
+      --border:      rgba(255,255,255,0.08);
+      --text:        #F0F0F5;
+      --text-muted:  #8888A0;
+      --accent:      #E63946;
+      --accent2:     #F5A623;
+      --card-radius: 12px;
+      --nav-h:       64px;
+    }
+    [data-theme="light"] {
+      --bg:         #F4F4F8;
+      --surface:    #FFFFFF;
+      --surface2:   #EAEAF0;
+      --border:     rgba(0,0,0,0.08);
+      --text:       #11111A;
+      --text-muted: #666680;
+    }
+
+    /* ============================================================
+       RESET & BASE
+    ============================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      transition: background 0.3s, color 0.3s;
+    }
+    a { text-decoration: none; color: inherit; }
+    img { display: block; width: 100%; }
+    ul { list-style: none; }
+
+    /* ============================================================
+       NAVIGATION
+    ============================================================ */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      height: var(--nav-h);
+      background: rgba(14,14,18,0.88);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2rem;
+      transition: background 0.3s;
+    }
+    [data-theme="light"] nav { background: rgba(244,244,248,0.9); }
+    .logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.8rem;
+      letter-spacing: 1px;
+      color: var(--accent);
+    }
+    .logo span { color: var(--text); }
+    .nav-links { display: flex; gap: 0.25rem; }
+    .nav-links a {
+      padding: 0.45rem 1rem;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      transition: color 0.2s, background 0.2s;
+    }
+    .nav-links a:hover, .nav-links a.active {
+      color: var(--text);
+      background: var(--surface2);
+    }
+    .nav-right { display: flex; align-items: center; gap: 0.75rem; }
+    .nav-search {
+      display: flex;
+      align-items: center;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.4rem 0.8rem;
+      gap: 0.5rem;
+    }
+    .nav-search input {
+      background: none; border: none; outline: none;
+      color: var(--text); font-size: 0.875rem; width: 180px;
+    }
+    .nav-search input::placeholder { color: var(--text-muted); }
+    .nav-search svg { color: var(--text-muted); flex-shrink: 0; }
+    .theme-btn {
+      width: 36px; height: 36px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--text);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem;
+      transition: background 0.2s;
+    }
+    .theme-btn:hover { background: var(--surface); }
+    .hamburger {
+      display: none; flex-direction: column;
+      gap: 5px; cursor: pointer; padding: 4px;
+    }
+    .hamburger span {
+      display: block; width: 22px; height: 2px;
+      background: var(--text); border-radius: 2px;
+    }
+
+    /* ============================================================
+       LAYOUT
+    ============================================================ */
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem; }
+    main { padding-top: var(--nav-h); }
+
+    .section-header {
+      display: flex; align-items: baseline;
+      justify-content: space-between; margin-bottom: 1.5rem;
+    }
+    .section-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.8rem; letter-spacing: 0.5px; color: var(--text);
+    }
+    .section-title span { color: var(--accent); }
+    .see-all {
+      font-size: 0.8rem; font-weight: 500; color: var(--accent);
+      padding: 0.3rem 0.8rem;
+      border: 1px solid var(--accent); border-radius: 20px;
+      transition: background 0.2s, color 0.2s; cursor: pointer;
+    }
+    .see-all:hover { background: var(--accent); color: #fff; }
+    section { padding: 3.5rem 0; }
+
+    /* ============================================================
+       HERO BANNER — real poster background
+    ============================================================ */
+    #home {
+      position: relative;
+      height: 92vh; min-height: 560px;
+      display: flex; align-items: flex-end; overflow: hidden;
+    }
+    .hero-bg-img {
+      position: absolute; inset: 0; z-index: 0;
+      background-size: cover;
+      background-position: center 20%;
+      background-repeat: no-repeat;
+      /* Dune Part Two backdrop from TMDB */
+      background-image: url('https://image.tmdb.org/t/p/original/xOMo8BRK7PfcJv9JCnx7s5hj0PX.jpg');
+    }
+    .hero-overlay {
+      position: absolute; inset: 0; z-index: 1;
+      background:
+        linear-gradient(to top,  var(--bg) 0%, rgba(14,14,18,0.6) 45%, rgba(14,14,18,0.1) 100%),
+        linear-gradient(to right, var(--bg) 0%, transparent 55%);
+    }
+    .hero-content {
+      position: relative; z-index: 2;
+      padding: 0 0 4rem 3rem; max-width: 620px;
+    }
+    .hero-badge {
+      display: inline-block; background: var(--accent); color: #fff;
+      font-size: 0.7rem; font-weight: 700; letter-spacing: 1.5px;
+      text-transform: uppercase; padding: 0.3rem 0.75rem;
+      border-radius: 4px; margin-bottom: 1rem;
+    }
+    .hero-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(3rem, 7vw, 5.5rem);
+      line-height: 1; letter-spacing: 1px; margin-bottom: 1rem;
+    }
+    .hero-meta {
+      display: flex; align-items: center; gap: 1rem;
+      margin-bottom: 1.2rem; font-size: 0.875rem; color: var(--text-muted);
+    }
+    .hero-meta .stars { color: var(--accent2); }
+    .hero-desc {
+      font-size: 0.95rem; line-height: 1.7;
+      color: rgba(240,240,245,0.8); max-width: 460px; margin-bottom: 2rem;
+    }
+    .hero-btns { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      padding: 0.75rem 1.5rem; border-radius: 8px;
+      font-size: 0.9rem; font-weight: 600;
+      cursor: pointer; border: none;
+      transition: transform 0.15s, opacity 0.15s;
+    }
+    .btn:hover { transform: translateY(-2px); opacity: 0.92; }
+    .btn-red   { background: var(--accent); color: #fff; }
+    .btn-ghost {
+      background: rgba(255,255,255,0.1);
+      color: var(--text); border: 1px solid rgba(255,255,255,0.2);
+    }
+    [data-theme="light"] .btn-ghost { background: rgba(0,0,0,0.06); border-color: var(--border); }
+
+    /* ============================================================
+       MOVIE CARD GRID
+    ============================================================ */
+    .movie-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
+      gap: 1.25rem;
+    }
+    .movie-card {
+      background: var(--surface);
+      border-radius: var(--card-radius);
+      overflow: hidden;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .movie-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 16px 40px rgba(0,0,0,0.4);
+    }
+
+    /* Poster — real image with fallback gradient */
+    .card-poster {
+      position: relative;
+      aspect-ratio: 2/3;
+      overflow: hidden;
+      background: var(--surface2);
+    }
+    .card-poster img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.4s ease;
+    }
+    .movie-card:hover .card-poster img { transform: scale(1.06); }
+
+    /* Fallback shown when image fails */
+    .card-poster-fallback {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.5rem; color: rgba(255,255,255,0.18);
+      z-index: 0;
+    }
+    .card-poster img { position: relative; z-index: 1; }
+
+    .card-badge {
+      position: absolute; top: 8px; left: 8px; z-index: 2;
+      background: var(--accent); color: #fff;
+      font-size: 0.65rem; font-weight: 700;
+      padding: 0.2rem 0.5rem; border-radius: 4px; letter-spacing: 0.5px;
+    }
+    .card-rating {
+      position: absolute; bottom: 8px; right: 8px; z-index: 2;
+      background: rgba(0,0,0,0.78); backdrop-filter: blur(4px);
+      color: var(--accent2); font-size: 0.78rem; font-weight: 700;
+      padding: 0.25rem 0.5rem; border-radius: 5px;
+      display: flex; align-items: center; gap: 3px;
+    }
+
+    /* Hover overlay with quick info */
+    .card-hover-overlay {
+      position: absolute; inset: 0; z-index: 3;
+      background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 55%);
+      opacity: 0; transition: opacity 0.25s;
+      display: flex; align-items: flex-end; padding: 0.75rem;
+    }
+    .movie-card:hover .card-hover-overlay { opacity: 1; }
+    .card-hover-desc {
+      font-size: 0.72rem; line-height: 1.5;
+      color: rgba(255,255,255,0.85);
+      display: -webkit-box;
+      -webkit-line-clamp: 3; -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .card-body { padding: 0.85rem; }
+    .card-title {
+      font-weight: 600; font-size: 0.9rem; margin-bottom: 0.3rem;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .card-meta {
+      font-size: 0.75rem; color: var(--text-muted);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .card-genre-pill {
+      background: var(--surface2); padding: 0.15rem 0.5rem;
+      border-radius: 20px; font-size: 0.7rem;
+    }
+
+    /* ============================================================
+       TRENDING STRIP
+    ============================================================ */
+    .trending-strip {
+      display: flex; gap: 1rem; overflow-x: auto;
+      padding-bottom: 0.75rem;
+      scrollbar-width: thin; scrollbar-color: var(--surface2) transparent;
+    }
+    .trending-strip::-webkit-scrollbar { height: 4px; }
+    .trending-strip::-webkit-scrollbar-track { background: transparent; }
+    .trending-strip::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 4px; }
+
+    .trending-card {
+      flex: 0 0 150px; background: var(--surface);
+      border-radius: var(--card-radius); overflow: hidden;
+      border: 1px solid var(--border); cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .trending-card:hover {
+      transform: scale(1.05);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+    }
+    .trending-poster {
+      aspect-ratio: 2/3;
+      position: relative;
+      overflow: hidden;
+      background: var(--surface2);
+    }
+    .trending-poster img {
+      width: 100%; height: 100%; object-fit: cover;
+      transition: transform 0.3s;
+    }
+    .trending-card:hover .trending-poster img { transform: scale(1.05); }
+    .trending-rank-badge {
+      position: absolute; top: 6px; left: 6px;
+      background: var(--accent); color: #fff;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1rem; padding: 0.1rem 0.45rem;
+      border-radius: 4px; line-height: 1.3;
+    }
+    .trending-info { padding: 0.6rem; }
+    .trending-title {
+      font-size: 0.8rem; font-weight: 600;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .trending-sub { font-size: 0.7rem; color: var(--accent2); font-weight: 600; }
+
+    /* ============================================================
+       GENRE TABS
+    ============================================================ */
+    .genre-tabs { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 2rem; }
+    .genre-tab {
+      padding: 0.4rem 1.1rem; border-radius: 20px;
+      border: 1px solid var(--border); background: var(--surface);
+      color: var(--text-muted); font-size: 0.85rem; font-weight: 500;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .genre-tab:hover  { border-color: var(--accent); color: var(--accent); }
+    .genre-tab.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+    /* ============================================================
+       SEARCH SECTION
+    ============================================================ */
+    .search-box {
+      max-width: 600px; margin: 0 auto 2.5rem;
+      display: flex; gap: 0.75rem;
+    }
+    .search-input {
+      flex: 1; background: var(--surface2);
+      border: 1px solid var(--border); border-radius: 10px;
+      padding: 0.85rem 1.2rem; color: var(--text);
+      font-size: 1rem; font-family: 'Inter', sans-serif;
+      outline: none; transition: border-color 0.2s;
+    }
+    .search-input:focus { border-color: var(--accent); }
+    .search-input::placeholder { color: var(--text-muted); }
+    .search-btn {
+      background: var(--accent); color: #fff; border: none;
+      border-radius: 10px; padding: 0 1.5rem;
+      font-size: 0.95rem; font-weight: 600; cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .search-btn:hover { opacity: 0.88; }
+    .search-results-label {
+      text-align: center; color: var(--text-muted);
+      font-size: 0.9rem; margin-bottom: 1.5rem;
+    }
+    .no-results { text-align: center; padding: 3rem; color: var(--text-muted); }
+    .no-results .big { font-size: 3rem; margin-bottom: 0.5rem; }
+
+    /* ============================================================
+       MODAL
+    ============================================================ */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.78); z-index: 200;
+      align-items: center; justify-content: center;
+      padding: 1rem; backdrop-filter: blur(6px);
+    }
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: var(--surface); border-radius: 16px;
+      border: 1px solid var(--border);
+      max-width: 720px; width: 100%;
+      max-height: 92vh; overflow-y: auto;
+      animation: popIn 0.25s ease;
+    }
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(0.94) translateY(12px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    /* Modal: side-by-side layout */
+    .modal-inner {
+      display: flex; flex-direction: column;
+    }
+
+    /* Top section: poster + info side by side */
+    .modal-top {
+      display: flex; gap: 0;
+    }
+
+    /* Poster column */
+    .modal-poster-col {
+      flex: 0 0 220px; position: relative;
+      border-radius: 16px 0 0 0;
+      overflow: hidden; background: var(--surface2);
+    }
+    .modal-poster-col img {
+      width: 100%; height: 100%;
+      object-fit: cover; display: block;
+      min-height: 300px;
+    }
+    .modal-poster-fallback {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 3rem; color: rgba(255,255,255,0.15);
+    }
+
+    /* Info column */
+    .modal-info-col {
+      flex: 1; padding: 1.75rem 1.5rem 1rem;
+      position: relative;
+    }
+    .modal-close {
+      position: absolute; top: 1rem; right: 1rem;
+      width: 32px; height: 32px; border-radius: 50%;
+      background: var(--surface2); color: var(--text);
+      border: 1px solid var(--border); cursor: pointer;
+      font-size: 1rem; display: flex;
+      align-items: center; justify-content: center;
+      transition: background 0.2s;
+    }
+    .modal-close:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+    .modal-genre-pill {
+      display: inline-block; background: var(--accent); color: #fff;
+      font-size: 0.7rem; font-weight: 700;
+      padding: 0.2rem 0.6rem; border-radius: 4px;
+      margin-bottom: 0.6rem; letter-spacing: 0.5px;
+    }
+    .modal-film-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2rem; letter-spacing: 0.5px; line-height: 1.1;
+      margin-bottom: 1rem;
+    }
+    .modal-meta-row {
+      display: flex; gap: 1rem; flex-wrap: wrap;
+      font-size: 0.82rem; color: var(--text-muted);
+      margin-bottom: 1rem;
+    }
+    .modal-meta-item { display: flex; align-items: center; gap: 0.35rem; }
+    .modal-meta-item strong { color: var(--text); }
+
+    /* Star rating */
+    .star-rating {
+      display: flex; gap: 3px; margin-bottom: 0.5rem; align-items: center;
+    }
+    .star {
+      font-size: 1.5rem; color: var(--surface2);
+      cursor: pointer; transition: color 0.12s, transform 0.12s;
+      user-select: none;
+    }
+    .star.lit   { color: var(--accent2); }
+    .star:hover { transform: scale(1.2); }
+    .star-label { margin-left: 0.5rem; font-size: 0.82rem; color: var(--text-muted); }
+
+    /* Bottom section: description + cast */
+    .modal-body-bottom {
+      padding: 0 1.5rem 1.5rem;
+      border-top: 1px solid var(--border);
+      margin-top: 0.5rem;
+    }
+    .modal-desc {
+      font-size: 0.9rem; line-height: 1.75;
+      color: var(--text-muted); padding: 1.25rem 0 1rem;
+    }
+    .modal-cast { font-size: 0.82rem; color: var(--text-muted); }
+    .modal-cast strong { color: var(--text); display: block; margin-bottom: 0.3rem; }
+
+    /* ============================================================
+       SECTION BG ALTERNATION
+    ============================================================ */
+    #latest     { background: var(--bg); }
+    #trending   { background: var(--surface); }
+    #recommend  { background: var(--bg); }
+    #search-sec { background: var(--surface); }
+
+    /* ============================================================
+       FOOTER
+    ============================================================ */
+    footer {
+      background: var(--surface); border-top: 1px solid var(--border);
+      padding: 3rem 0 2rem;
+    }
+    .footer-grid {
+      display: grid; grid-template-columns: 2fr 1fr 1fr;
+      gap: 3rem; margin-bottom: 2.5rem;
+    }
+    .footer-logo {
+      font-family: 'Bebas Neue', sans-serif; font-size: 2rem;
+      color: var(--accent); margin-bottom: 0.75rem;
+    }
+    .footer-logo span { color: var(--text); }
+    .footer-about {
+      font-size: 0.875rem; color: var(--text-muted); line-height: 1.7;
+    }
+    .footer-heading {
+      font-size: 0.75rem; font-weight: 700;
+      letter-spacing: 1.5px; text-transform: uppercase;
+      color: var(--text-muted); margin-bottom: 1rem;
+    }
+    .footer-links li { margin-bottom: 0.6rem; }
+    .footer-links a { font-size: 0.875rem; color: var(--text-muted); transition: color 0.2s; }
+    .footer-links a:hover { color: var(--accent); }
+    .footer-bottom {
+      border-top: 1px solid var(--border); padding-top: 1.5rem;
+      text-align: center; font-size: 0.8rem; color: var(--text-muted);
+    }
+    .footer-bottom span { color: var(--accent); }
+
+    /* ============================================================
+       RESPONSIVE
+    ============================================================ */
+    @media (max-width: 768px) {
+      .nav-links, .nav-search { display: none; }
+      .hamburger { display: flex; }
+      .mobile-menu {
+        display: none; position: fixed;
+        top: var(--nav-h); left: 0; right: 0;
+        background: var(--surface); border-bottom: 1px solid var(--border);
+        padding: 1rem 1.5rem; z-index: 99;
+        flex-direction: column; gap: 0.25rem;
+      }
+      .mobile-menu.open { display: flex; }
+      .mobile-menu a {
+        padding: 0.75rem 0.5rem; font-size: 1rem; font-weight: 500;
+        color: var(--text-muted); border-bottom: 1px solid var(--border);
+      }
+      .mobile-menu a:last-child { border-bottom: none; }
+      .hero-content { padding: 0 1.25rem 3rem; }
+      .footer-grid { grid-template-columns: 1fr; gap: 2rem; }
+      .movie-grid  { grid-template-columns: repeat(auto-fill, minmax(145px, 1fr)); }
+
+      /* Modal stacks vertically on mobile */
+      .modal-top { flex-direction: column; }
+      .modal-poster-col {
+        flex: 0 0 auto; border-radius: 16px 16px 0 0;
+        max-height: 260px; overflow: hidden;
+      }
+      .modal-poster-col img { min-height: auto; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<!-- ============================================================
+     NAVIGATION
+============================================================ -->
+<nav id="navbar">
+  <a href="#home" class="logo">Cine<span>Verse</span></a>
+
+  <ul class="nav-links">
+    <li><a href="#home"       class="active" onclick="setActive(this)">Home</a></li>
+    <li><a href="#latest"     onclick="setActive(this)">Movies</a></li>
+    <li><a href="#recommend"  onclick="setActive(this)">Recommendations</a></li>
+    <li><a href="#search-sec" onclick="setActive(this)">Search</a></li>
+  </ul>
+
+  <div class="nav-right">
+    <div class="nav-search">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input type="text" id="navSearchInput" placeholder="Quick search…" onkeyup="quickSearch(event)" />
+    </div>
+    <button class="theme-btn" onclick="toggleTheme()" id="themeBtn" title="Toggle dark/light mode">🌙</button>
+    <div class="hamburger" onclick="toggleMobileMenu()">
+      <span></span><span></span><span></span>
+    </div>
+  </div>
+</nav>
+
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#home"       onclick="closeMobileMenu()">Home</a>
+  <a href="#latest"     onclick="closeMobileMenu()">Movies</a>
+  <a href="#recommend"  onclick="closeMobileMenu()">Recommendations</a>
+  <a href="#search-sec" onclick="closeMobileMenu()">Search</a>
+</div>
+
+
+<!-- ============================================================
+     MAIN
+============================================================ -->
+<main>
+
+  <!-- ── HERO BANNER ─────────────────────────────── -->
+  <section id="home">
+    <!-- Real Dune 2 backdrop from TMDB CDN -->
+    <div class="hero-bg-img"></div>
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <span class="hero-badge">🎬 Featured Film</span>
+      <h1 class="hero-title">Dune: Part Two</h1>
+      <div class="hero-meta">
+        <span class="stars">★★★★★</span>
+        <span>9.2 / 10</span>
+        <span>·</span>
+        <span>2024</span>
+        <span>·</span>
+        <span>166 min</span>
+      </div>
+      <p class="hero-desc">
+        Paul Atreides unites with Chani and the Fremen on a warpath of revenge.
+        Facing a choice between the love of his life and the fate of the known universe,
+        he must prevent a terrible future only he can foresee.
+      </p>
+      <div class="hero-btns">
+        <button class="btn btn-red"   onclick="openModal('dune2')">▶ Details</button>
+        <button class="btn btn-ghost" onclick="document.getElementById('search-sec').scrollIntoView({behavior:'smooth'})">🔍 Search Movies</button>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ── LATEST RELEASES ───────────────────────────────────── -->
+  <section id="latest">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">Latest <span>Releases</span></h2>
+        <span class="see-all" onclick="showAllMovies()">See all</span>
+      </div>
+      <div class="movie-grid" id="latestGrid"></div>
+    </div>
+  </section>
+
+
+  <!-- ── TRENDING ───────────────────────────────────────────── -->
+  <section id="trending">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">🔥 Trending <span>Now</span></h2>
+      </div>
+      <div class="trending-strip" id="trendingStrip"></div>
+    </div>
+  </section>
+
+
+  <!-- ── RECOMMENDATIONS ───────────────────────────────────── -->
+  <section id="recommend">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">Picks by <span>Genre</span></h2>
+      </div>
+      <div class="genre-tabs" id="genreTabs">
+        <button class="genre-tab active"  onclick="filterGenre('All',       this)">All</button>
+        <button class="genre-tab"         onclick="filterGenre('Action',    this)">Action</button>
+        <button class="genre-tab"         onclick="filterGenre('Comedy',    this)">Comedy</button>
+        <button class="genre-tab"         onclick="filterGenre('Thriller',  this)">Thriller</button>
+        <button class="genre-tab"         onclick="filterGenre('Sci-Fi',    this)">Sci-Fi</button>
+        <button class="genre-tab"         onclick="filterGenre('Drama',     this)">Drama</button>
+        <button class="genre-tab"         onclick="filterGenre('Horror',    this)">Horror</button>
+        <button class="genre-tab"         onclick="filterGenre('Animation', this)">Animation</button>
+      </div>
+      <div class="movie-grid" id="recommendGrid"></div>
+    </div>
+  </section>
+
+
+  <!-- ── SEARCH ────────────────────────────────────────────── -->
+  <section id="search-sec">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">🔍 Search <span>Movies</span></h2>
+      </div>
+      <div class="search-box">
+        <input class="search-input" id="mainSearchInput" type="text"
+               placeholder="Type a movie name, genre, or actor…"
+               onkeyup="doSearch()" />
+        <button class="search-btn" onclick="doSearch()">Search</button>
+      </div>
+      <p class="search-results-label" id="searchLabel"></p>
+      <div class="movie-grid" id="searchResults"></div>
+    </div>
+  </section>
+
+</main>
+
+
+<!-- ============================================================
+     MOVIE DETAIL MODAL
+============================================================ -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalOnBg(event)">
+  <div class="modal" id="modalBox" role="dialog" aria-modal="true">
+    <div class="modal-inner">
+
+      <!-- Top: poster + info -->
+      <div class="modal-top">
+
+        <!-- Poster image -->
+        <div class="modal-poster-col">
+          <div class="modal-poster-fallback" id="modalPosterFallback"></div>
+          <img id="modalPosterImg" src="" alt="Movie poster"
+               onerror="this.style.display='none'" />
+        </div>
+
+        <!-- Info -->
+        <div class="modal-info-col">
+          <button class="modal-close" onclick="closeModal()" aria-label="Close">✕</button>
+          <span class="modal-genre-pill" id="modalGenre">Genre</span>
+          <h2 class="modal-film-title" id="modalTitle">Movie Title</h2>
+
+          <div class="modal-meta-row">
+            <div class="modal-meta-item">⭐ <strong id="modalRatingVal">8.5</strong>/10</div>
+            <div class="modal-meta-item">📅 <strong id="modalYear">2024</strong></div>
+            <div class="modal-meta-item">⏱ <strong id="modalDuration">120 min</strong></div>
+            <div class="modal-meta-item">🌐 <strong id="modalLang">English</strong></div>
+          </div>
+
+          <!-- Interactive star rating -->
+          <div class="star-rating" id="starRating">
+            <span class="star" data-val="1" onclick="rateStar(1)">★</span>
+            <span class="star" data-val="2" onclick="rateStar(2)">★</span>
+            <span class="star" data-val="3" onclick="rateStar(3)">★</span>
+            <span class="star" data-val="4" onclick="rateStar(4)">★</span>
+            <span class="star" data-val="5" onclick="rateStar(5)">★</span>
+            <span class="star-label" id="starLabel">Rate this movie</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom: description + cast -->
+      <div class="modal-body-bottom">
+        <p class="modal-desc" id="modalDesc">Description.</p>
+        <div class="modal-cast">
+          <strong>Cast</strong>
+          <span id="modalCast">—</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- ============================================================
+     FOOTER
+============================================================ -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-logo">Cine<span>Verse</span></div>
+        <p class="footer-about">
+          CineVerse is your go-to destination for movie updates,
+          trending picks, and personalised recommendations.
+          Built with ❤️ for film lovers everywhere.
+        </p>
+      </div>
+      <div>
+        <p class="footer-heading">Explore</p>
+        <ul class="footer-links">
+          <li><a href="#home">Home</a></li>
+          <li><a href="#latest">Latest Releases</a></li>
+          <li><a href="#trending">Trending</a></li>
+          <li><a href="#recommend">Recommendations</a></li>
+          <li><a href="#search-sec">Search</a></li>
+        </ul>
+      </div>
+      <div>
+        <p class="footer-heading">Genres</p>
+        <ul class="footer-links">
+          <li><a href="#recommend" onclick="filterGenre('Action',   document.querySelector('.genre-tab:nth-child(2)'))">Action</a></li>
+          <li><a href="#recommend" onclick="filterGenre('Comedy',   document.querySelector('.genre-tab:nth-child(3)'))">Comedy</a></li>
+          <li><a href="#recommend" onclick="filterGenre('Thriller', document.querySelector('.genre-tab:nth-child(4)'))">Thriller</a></li>
+          <li><a href="#recommend" onclick="filterGenre('Sci-Fi',   document.querySelector('.genre-tab:nth-child(5)'))">Sci-Fi</a></li>
+          <li><a href="#recommend" onclick="filterGenre('Horror',   document.querySelector('.genre-tab:nth-child(7)'))">Horror</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      &copy; 2026 <span>CineVerse</span>. Made with ❤️ for movie lovers.
+      &nbsp;|&nbsp; Images © TMDB
+    </div>
+  </div>
+</footer>
+
+
+<!-- ============================================================
+     JAVASCRIPT
+============================================================ -->
+<script>
+  /* ============================================================
+     MOVIE DATA — poster paths from TMDB CDN
+     Image URL format: https://image.tmdb.org/t/p/w500/<posterPath>
+  ============================================================ */
+  const TMDB = 'https://image.tmdb.org/t/p/w500';
+
+  const MOVIES = [
+    {
+      id: 'dune2',
+      title: 'Dune: Part Two',
+      genre: 'Sci-Fi',
+      year: 2024,
+      duration: '166 min',
+      lang: 'English',
+      rating: 9.2,
+      poster: TMDB + '/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg',
+      desc: "Paul Atreides unites with Chani and the Fremen while on a warpath of revenge against the conspirators who destroyed his family. Facing a choice between the love of his life and the fate of the known universe, he endeavors to prevent a terrible future only he can foresee.",
+      cast: 'Timothée Chalamet, Zendaya, Rebecca Ferguson, Josh Brolin',
+      badge: 'NEW',
+      trending: true,
+      gradient: 'linear-gradient(135deg,#c07d2b,#3a1a00)'
+    },
+    {
+      id: 'oppenheimer',
+      title: 'Oppenheimer',
+      genre: 'Drama',
+      year: 2023,
+      duration: '180 min',
+      lang: 'English',
+      rating: 8.9,
+      poster: TMDB + '/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg',
+      desc: "The story of American scientist J. Robert Oppenheimer and his role in the development of the atomic bomb during World War II. A visually stunning and emotionally complex portrait of brilliance and moral consequence.",
+      cast: 'Cillian Murphy, Emily Blunt, Matt Damon, Robert Downey Jr.',
+      badge: 'HIT',
+      trending: true,
+      gradient: 'linear-gradient(135deg,#1a1a2e,#4a0000)'
+    },
+    {
+      id: 'guardians3',
+      title: 'Guardians Vol. 3',
+      genre: 'Action',
+      year: 2023,
+      duration: '150 min',
+      lang: 'English',
+      rating: 8.1,
+      poster: TMDB + '/r2J02Z2OpNTctfOSN1Ydgii51I3.jpg',
+      desc: "Still reeling from the loss of Gamora, Peter Quill rallies his team to defend the universe and protect one of their own. A mission that, if not completed successfully, could quite possibly lead to the Guardians' end.",
+      cast: 'Chris Pratt, Zoe Saldaña, Bradley Cooper, Vin Diesel',
+      badge: 'ACTION',
+      trending: true,
+      gradient: 'linear-gradient(135deg,#cc5500,#1a0a30)'
+    },
+    {
+      id: 'barbie',
+      title: 'Barbie',
+      genre: 'Comedy',
+      year: 2023,
+      duration: '114 min',
+      lang: 'English',
+      rating: 7.9,
+      poster: TMDB + '/iuFNMS8vlzspes8jen0r5yEpXPk.jpg',
+      desc: "Barbie and Ken are having the time of their lives in the colorful and seemingly perfect world of Barbie Land. When they get a chance to go to the real world, Barbie and Ken discover the joys and perils of living among humans.",
+      cast: 'Margot Robbie, Ryan Gosling, America Ferrera, Kate McKinnon',
+      badge: 'COMEDY',
+      trending: false,
+      gradient: 'linear-gradient(135deg,#ff69b4,#c71585)'
+    },
+    {
+      id: 'killers',
+      title: 'Killers of the Flower Moon',
+      genre: 'Thriller',
+      year: 2023,
+      duration: '206 min',
+      lang: 'English',
+      rating: 8.3,
+      poster: TMDB + '/dB6jcjzB3M0nW7KOGlap1LgJIZz.jpg',
+      desc: "Members of the Osage Nation are murdered under mysterious circumstances in the 1920s, sparking a major FBI investigation. Scorsese's haunting epic about greed, love, and betrayal.",
+      cast: 'Leonardo DiCaprio, Lily Gladstone, Robert De Niro',
+      badge: 'THRILLER',
+      trending: true,
+      gradient: 'linear-gradient(135deg,#3d0c02,#1a0000)'
+    },
+    {
+      id: 'migration',
+      title: 'Migration',
+      genre: 'Animation',
+      year: 2023,
+      duration: '83 min',
+      lang: 'English',
+      rating: 7.2,
+      poster: TMDB + '/ldfCF9RhR40mppkzmfu3zCFGSCZ.jpg',
+      desc: "A family of ducks try to convince their overprotective father to go on the vacation of a lifetime. What starts as a local trip turns into an around-the-world adventure.",
+      cast: 'Kumail Nanjiani, Elizabeth Banks, Caspar Jennings',
+      badge: 'ANIMATED',
+      trending: false,
+      gradient: 'linear-gradient(135deg,#1a6b9a,#0a1a3a)'
+    },
+    {
+      id: 'talk2me',
+      title: 'Talk to Me',
+      genre: 'Horror',
+      year: 2023,
+      duration: '95 min',
+      lang: 'English',
+      rating: 7.7,
+      poster: TMDB + '/kdPMUlbRIHaUGiMxCHtwJBMW4e.jpg',
+      desc: "When a group of friends discover how to conjure spirits using an embalmed hand, they become hooked on the new thrill — until one of them goes too far and unleashes terrifying supernatural forces.",
+      cast: 'Sophie Wilde, Alexandra Jensen, Joe Bird',
+      badge: 'HORROR',
+      trending: false,
+      gradient: 'linear-gradient(135deg,#1a0030,#000)'
+    },
+    {
+      id: 'asteroid',
+      title: 'Asteroid City',
+      genre: 'Comedy',
+      year: 2023,
+      duration: '105 min',
+      lang: 'English',
+      rating: 6.8,
+      poster: TMDB + '/lBMZin5syWkm8gRSBKqBPuVsVBk.jpg',
+      desc: "The itinerary of a junior stargazer convention is upended by world-changing events in a 1955 American desert town. Wes Anderson's most visually inventive film.",
+      cast: 'Jason Schwartzman, Scarlett Johansson, Tom Hanks, Margot Robbie',
+      badge: 'NEW',
+      trending: false,
+      gradient: 'linear-gradient(135deg,#e8c870,#5c3a00)'
+    },
+    {
+      id: 'equalizer3',
+      title: 'The Equalizer 3',
+      genre: 'Action',
+      year: 2023,
+      duration: '109 min',
+      lang: 'English',
+      rating: 7.5,
+      poster: TMDB + '/b0Ej6fnXAZWFE2ZAFgAZfXfTmrS.jpg',
+      desc: "Robert McCall finds himself at home in Southern Italy but discovers his associates are members of the local Camorra crime syndicate. Brutal, efficient action.",
+      cast: 'Denzel Washington, Dakota Fanning, David Denman',
+      badge: 'ACTION',
+      trending: true,
+      gradient: 'linear-gradient(135deg,#0a0a0a,#3d0c02)'
+    },
+    {
+      id: 'indiana5',
+      title: 'Dial of Destiny',
+      genre: 'Action',
+      year: 2023,
+      duration: '154 min',
+      lang: 'English',
+      rating: 6.9,
+      poster: TMDB + '/Af4bXE63pVsb2FtbW8uYICmhsA.jpg',
+      desc: "Archaeologist Indiana Jones races against time to retrieve a legendary dial that may allow its owner to change history. Harrison Ford's final outing as the iconic adventurer.",
+      cast: 'Harrison Ford, Phoebe Waller-Bridge, Antonio Banderas',
+      badge: 'ADVENTURE',
+      trending: false,
+      gradient: 'linear-gradient(135deg,#8b6914,#1a1200)'
+    },
+    {
+      id: 'society',
+      title: 'Society of the Snow',
+      genre: 'Drama',
+      year: 2023,
+      duration: '144 min',
+      lang: 'Spanish',
+      rating: 8.0,
+      poster: TMDB + '/2e853FDVSIso600RqAMunPxiZjq.jpg',
+      desc: "Survivors of a plane crash in the Andes fight for survival in freezing conditions after the crash of Uruguayan Air Force Flight 571 in 1972. A harrowing true story.",
+      cast: 'Agustín Pardella, Matías Recalt, Tomás Wolf',
+      badge: 'TRUE STORY',
+      trending: false,
+      gradient: 'linear-gradient(135deg,#e8f0ff,#2c4a7c)'
+    },
+    {
+      id: 'poor',
+      title: 'Poor Things',
+      genre: 'Drama',
+      year: 2023,
+      duration: '141 min',
+      lang: 'English',
+      rating: 8.6,
+      poster: TMDB + '/kCGlIMHnOm8JPXEaM7E8nGNzMkE.jpg',
+      desc: "The incredible tale about the fantastical evolution of Bella Baxter; a young woman brought back to life by the brilliant and unorthodox scientist Dr. Godwin Baxter.",
+      cast: 'Emma Stone, Mark Ruffalo, Willem Dafoe',
+      badge: 'AWARD',
+      trending: true,
+      gradient: 'linear-gradient(135deg,#2d1b69,#38ef7d)'
+    }
+  ];
+
+
+  /* ============================================================
+     CARD BUILDER — uses real poster image
+  ============================================================ */
+  function createCard(movie) {
+    const div = document.createElement('div');
+    div.className = 'movie-card';
+    div.onclick = () => openModal(movie.id);
+
+    div.innerHTML = `
+      <div class="card-poster" style="background:${movie.gradient};">
+        <div class="card-poster-fallback">${movie.title.slice(0,2).toUpperCase()}</div>
+        <img
+          src="${movie.poster}"
+          alt="${movie.title} poster"
+          loading="lazy"
+          onerror="this.style.display='none'"
+        />
+        ${movie.badge ? `<span class="card-badge">${movie.badge}</span>` : ''}
+        <div class="card-rating">⭐ ${movie.rating}</div>
+        <div class="card-hover-overlay">
+          <p class="card-hover-desc">${movie.desc}</p>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="card-title">${movie.title}</div>
+        <div class="card-meta">
+          <span>${movie.year}</span>
+          <span class="card-genre-pill">${movie.genre}</span>
+        </div>
+      </div>
+    `;
+    return div;
+  }
+
+
+  /* ============================================================
+     RENDER FUNCTIONS
+  ============================================================ */
+  function renderLatest() {
+    const grid = document.getElementById('latestGrid');
+    grid.innerHTML = '';
+    MOVIES.slice(0, 8).forEach(m => grid.appendChild(createCard(m)));
+  }
+
+  function renderTrending() {
+    const strip = document.getElementById('trendingStrip');
+    strip.innerHTML = '';
+    MOVIES.filter(m => m.trending).forEach((m, i) => {
+      const card = document.createElement('div');
+      card.className = 'trending-card';
+      card.onclick = () => openModal(m.id);
+      card.innerHTML = `
+        <div class="trending-poster" style="background:${m.gradient};">
+          <img src="${m.poster}" alt="${m.title}" loading="lazy" onerror="this.style.display='none'" />
+          <span class="trending-rank-badge">#${i + 1}</span>
+        </div>
+        <div class="trending-info">
+          <div class="trending-sub">#${i + 1} Trending · ${m.genre}</div>
+          <div class="trending-title">${m.title}</div>
+        </div>
+      `;
+      strip.appendChild(card);
+    });
+  }
+
+  function renderRecommend(genre = 'All') {
+    const grid = document.getElementById('recommendGrid');
+    grid.innerHTML = '';
+    const list = genre === 'All' ? MOVIES : MOVIES.filter(m => m.genre === genre);
+    if (list.length === 0) {
+      grid.innerHTML = `<div class="no-results"><div class="big">🎬</div>No movies in this genre yet.</div>`;
+      return;
+    }
+    list.forEach(m => grid.appendChild(createCard(m)));
+  }
+
+  function showAllMovies() {
+    const grid = document.getElementById('latestGrid');
+    grid.innerHTML = '';
+    MOVIES.forEach(m => grid.appendChild(createCard(m)));
+  }
+
+
+  /* ============================================================
+     GENRE FILTER
+  ============================================================ */
+  function filterGenre(genre, btn) {
+    document.querySelectorAll('.genre-tab').forEach(t => t.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    renderRecommend(genre);
+  }
+
+
+  /* ============================================================
+     SEARCH
+  ============================================================ */
+  function doSearch() {
+    const q       = document.getElementById('mainSearchInput').value.trim().toLowerCase();
+    const results = document.getElementById('searchResults');
+    const label   = document.getElementById('searchLabel');
+
+    if (!q) { results.innerHTML = ''; label.textContent = ''; return; }
+
+    const found = MOVIES.filter(m =>
+      m.title.toLowerCase().includes(q) ||
+      m.genre.toLowerCase().includes(q) ||
+      m.cast.toLowerCase().includes(q)
+    );
+
+    label.textContent = `${found.length} result${found.length !== 1 ? 's' : ''} for "${q}"`;
+    results.innerHTML = '';
+
+    if (found.length === 0) {
+      results.innerHTML = `<div class="no-results" style="grid-column:1/-1">
+        <div class="big">🔍</div>
+        No movies found for "<strong>${q}</strong>". Try a different title, genre, or actor.
+      </div>`;
+      return;
+    }
+    found.forEach(m => results.appendChild(createCard(m)));
+  }
+
+  function quickSearch(e) {
+    const val = document.getElementById('navSearchInput').value;
+    document.getElementById('mainSearchInput').value = val;
+    if (e.key === 'Enter') {
+      document.getElementById('search-sec').scrollIntoView({ behavior: 'smooth' });
+      doSearch();
+    }
+  }
+
+
+  /* ============================================================
+     MODAL
+  ============================================================ */
+  let currentRating = 0;
+
+  function openModal(movieId) {
+    const movie = MOVIES.find(m => m.id === movieId);
+    if (!movie) return;
+
+    document.getElementById('modalTitle').textContent     = movie.title;
+    document.getElementById('modalGenre').textContent     = movie.genre;
+    document.getElementById('modalRatingVal').textContent = movie.rating;
+    document.getElementById('modalYear').textContent      = movie.year;
+    document.getElementById('modalDuration').textContent  = movie.duration;
+    document.getElementById('modalLang').textContent      = movie.lang;
+    document.getElementById('modalDesc').textContent      = movie.desc;
+    document.getElementById('modalCast').textContent      = movie.cast;
+    document.getElementById('modalPosterFallback').textContent = movie.title.slice(0,2).toUpperCase();
+
+    const posterImg = document.getElementById('modalPosterImg');
+    posterImg.style.display = 'block';
+    posterImg.src = movie.poster;
+    posterImg.alt = movie.title + ' poster';
+
+    /* Poster column gradient fallback */
+    document.querySelector('.modal-poster-col').style.background = movie.gradient;
+
+    currentRating = 0;
+    updateStars(0);
+    document.getElementById('starLabel').textContent = 'Rate this movie';
+
+    document.getElementById('modalOverlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeModal() {
+    document.getElementById('modalOverlay').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  function closeModalOnBg(e) {
+    if (e.target === document.getElementById('modalOverlay')) closeModal();
+  }
+
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+
+  /* ============================================================
+     STAR RATING
+  ============================================================ */
+  function rateStar(val) {
+    currentRating = val;
+    updateStars(val);
+    const labels = ['', 'Poor 😕', 'Fair 😐', 'Good 🙂', 'Great 😊', 'Amazing! 🤩'];
+    document.getElementById('starLabel').textContent = `You rated: ${labels[val]} (${val}/5)`;
+  }
+
+  function updateStars(val) {
+    document.querySelectorAll('.star').forEach(s => {
+      s.classList.toggle('lit', parseInt(s.dataset.val) <= val);
+    });
+  }
+
+  document.querySelectorAll('.star').forEach(s => {
+    s.addEventListener('mouseover', () => updateStars(parseInt(s.dataset.val)));
+    s.addEventListener('mouseout',  () => updateStars(currentRating));
+  });
+
+
+  /* ============================================================
+     DARK / LIGHT TOGGLE
+  ============================================================ */
+  function toggleTheme() {
+    const html  = document.documentElement;
+    const isDark = html.getAttribute('data-theme') === 'dark';
+    html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+    document.getElementById('themeBtn').textContent = isDark ? '🌞' : '🌙';
+  }
+
+
+  /* ============================================================
+     MOBILE MENU
+  ============================================================ */
+  function toggleMobileMenu() {
+    document.getElementById('mobileMenu').classList.toggle('open');
+  }
+  function closeMobileMenu() {
+    document.getElementById('mobileMenu').classList.remove('open');
+  }
+
+
+  /* ============================================================
+     NAV ACTIVE STATE
+  ============================================================ */
+  function setActive(el) {
+    document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+    el.classList.add('active');
+  }
+
+  window.addEventListener('scroll', () => {
+    const scrollY = window.scrollY + 100;
+    ['home','latest','recommend','search-sec'].forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (scrollY >= el.offsetTop && scrollY < el.offsetTop + el.offsetHeight) {
+        document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+        const link = document.querySelector(`.nav-links a[href="#${id}"]`);
+        if (link) link.classList.add('active');
+      }
+    });
+  });
+
+
+  /* ============================================================
+     INIT
+  ============================================================ */
+  renderLatest();
+  renderTrending();
+  renderRecommend('All');
+</script>
+
+</body>
+</html>
