@@ -1,0 +1,27 @@
+SOP NAME
+Section 1: Incident Information
+Incident ID
+Date & Time
+Reported By
+Severity Level
+Section 2: Problem Description
+Business Impact
+Symptoms
+Affected Services
+Section 3: Root Cause Analysis
+Probable Causes
+Confirmed Root Cause
+Section 4: Troubleshooting Steps
+Diagnostic Commands
+AWS Services Checked
+Logs Reviewed
+Section 5: Resolution
+Corrective Actions Taken
+Validation Performed
+Section 6: Rollback Plan
+Recovery Actions
+Backup Verification
+Section 7: Preventive Measures
+Monitoring Configuration
+Alerting Configuration
+Security Improvements
