@@ -25,3 +25,4 @@ Section 7: Preventive Measures
 Monitoring Configuration
 Alerting Configuration
 Security Improvements
+4	ISSUE:MFA Delete cannot be enabled	Admin attempts MFA Delete and receives error.	Scenario:Error enabling MFA Delete; versioning not enabled; Symptoms:not using root credentials.
